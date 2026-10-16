@@ -1,0 +1,18 @@
+# The formulas this tap publishes, each from the releases of one repository.
+#
+# A formula is written by `tools/update.py` from its repository's latest
+# release; see the README for what a release must hold.
+
+[stemma]
+repo = "stemma-math/stemma-exedra"
+binary = "stemma"
+desc = "Collaborative platform for humans and agents doing mathematics"
+license = "MIT"
+conflicts = ["stemma-signum"]
+
+[stemma-signum]
+repo = "stemma-math/stemma-signum"
+binary = "stemma"
+desc = "Standard, and a command-line that implements it, for doing mathematics"
+license = "MIT"
+conflicts = ["stemma"]

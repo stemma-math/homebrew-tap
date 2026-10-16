@@ -1,0 +1,40 @@
+# Announces a package's new release to the tap, which then updates its
+# formula. A repository calls it once its release is published:
+#
+#   notify-tap:
+#     needs: publish
+#     uses: stemma-math/homebrew-tap/.github/workflows/notify.yml@main
+#     with:
+#       package: stemma
+#     secrets: inherit
+#
+# It needs `HOMEBREW_TAP_TOKEN`, a token that may write this repository's
+# contents; without it, it only says so, and the tap is updated by hand.
+name: Notify
+
+on:
+  workflow_call:
+    inputs:
+      package:
+        description: The formula, as `packages.toml` names it.
+        type: string
+        required: true
+    secrets:
+      HOMEBREW_TAP_TOKEN:
+        required: false
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Announce the release
+        env:
+          GH_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+          PACKAGE: ${{ inputs.package }}
+        run: |
+          if [ -z "$GH_TOKEN" ]; then
+            echo "::warning::No HOMEBREW_TAP_TOKEN: update $PACKAGE in stemma-math/homebrew-tap by hand."
+            exit 0
+          fi
+          gh api repos/stemma-math/homebrew-tap/dispatches \
+            -f event_type=release -f "client_payload[package]=$PACKAGE"

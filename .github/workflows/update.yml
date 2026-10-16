@@ -1,0 +1,38 @@
+# Writes the formulas again from their repositories' latest releases, and
+# commits what changed. Run by hand, or when a repository announces a
+# release through `notify.yml`.
+name: Update
+
+on:
+  workflow_dispatch:
+    inputs:
+      package:
+        description: The formula to update; every formula when empty.
+        required: false
+  repository_dispatch:
+    types: [release]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Write the formulas
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PACKAGE: ${{ inputs.package || github.event.client_payload.package }}
+        run: python3 tools/update.py $PACKAGE
+      - name: Commit what changed
+        run: |
+          git add Formula
+          git diff --cached --quiet && exit 0
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "chore: update $(git diff --cached --name-only | xargs -n1 basename | sed 's/\.rb$//' | paste -sd, -)"
+          git push
