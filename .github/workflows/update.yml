@@ -27,7 +27,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           PACKAGE: ${{ inputs.package || github.event.client_payload.package }}
-        run: python3 tools/update.py $PACKAGE
+        run: python3 tools/update.py ${PACKAGE:+"$PACKAGE"}
       - name: Commit what changed
         run: |
           git add Formula
