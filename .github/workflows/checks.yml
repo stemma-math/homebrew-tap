@@ -1,0 +1,29 @@
+# Each formula must pass Homebrew's style, install, and run.
+name: Checks
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  formulas:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: Homebrew/actions/setup-homebrew@main
+      - name: Style
+        run: brew style stemma-math/tap
+      # One at a time: formulas may conflict with each other.
+      - name: Install and test
+        run: |
+          for formula in Formula/*.rb; do
+            name="stemma-math/tap/$(basename "$formula" .rb)"
+            brew install "$name"
+            brew test "$name"
+            brew uninstall "$name"
+          done
+        working-directory: ${{ github.workspace }}
