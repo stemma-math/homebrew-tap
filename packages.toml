@@ -1,7 +1,8 @@
-# The formulas this tap publishes, each from the releases of one repository.
+# The formulas and casks this tap publishes, each from the releases of one
+# repository. A package with `app` is a cask, for macOS; any other, a formula.
 #
-# A formula is written by `tools/update.py` from its repository's latest
-# release; see the README for what a release must hold.
+# Each is written by `tools/update.py` from its repository's latest release;
+# see the README for what a release must hold.
 
 [stemma]
 repo = "stemma-math/stemma-exedra"
@@ -16,3 +17,11 @@ binary = "stemma"
 desc = "Standard, and a command-line that implements it, for doing mathematics"
 license = "MIT"
 conflicts = ["stemma"]
+
+[stemma-app]
+repo = "stemma-math/stemma-exedra"
+asset = "stemma-app"
+app = "Stemma.app"
+name = "Stemma"
+desc = "Desktop app for doing mathematics with people and agents"
+depends_on = "stemma"

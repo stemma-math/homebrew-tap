@@ -1,8 +1,8 @@
-"""Write each formula from its repository's latest release.
+"""Write each formula and cask from its repository's latest release.
 
     python3 tools/update.py [package...]
 
-With no packages, every one in `packages.toml`. A formula is written only
+With no packages, every one in `packages.toml`. A package is written only
 from what the release holds: its version, its archives and their sums.
 """
 
@@ -44,8 +44,9 @@ def latest_release(repo: str) -> dict:
     sys.exit(f"{repo} has no published release")
 
 
-def archives(name: str, binary: str, release: dict) -> dict[tuple, tuple]:
-    """Each platform's archive in the release, with its URL and sum."""
+def archives(name: str, prefix: str, suffix: str, release: dict) -> dict[tuple, tuple]:
+    """Each platform's `<prefix>-<version>-<target><suffix>` in the release,
+    with its URL and sum."""
     version = release["tag_name"].removeprefix("v")
     assets = {a["name"]: a["browser_download_url"] for a in release["assets"]}
     if "SHA256SUMS" not in assets:
@@ -53,21 +54,21 @@ def archives(name: str, binary: str, release: dict) -> dict[tuple, tuple]:
     found = {}
     for line in get(assets["SHA256SUMS"]).decode().splitlines():
         sha256, _, file = line.partition("  ")
-        prefix, suffix = f"{binary}-{version}-", ".tar.gz"
-        if not (file.startswith(prefix) and file.endswith(suffix)):
+        start = f"{prefix}-{version}-"
+        if not (file.startswith(start) and file.endswith(suffix)):
             continue
-        target = file.removeprefix(prefix).removesuffix(suffix)
+        target = file.removeprefix(start).removesuffix(suffix)
         if target in PLATFORMS and file in assets:
             found[PLATFORMS[target]] = (assets[file], sha256)
-    if not found:
-        sys.exit(f"{name}: the release {release['tag_name']} has no archives")
     return found
 
 
 def formula(name: str, package: dict, release: dict) -> str:
     repo, binary = package["repo"], package["binary"]
     version = release["tag_name"].removeprefix("v")
-    found = archives(name, binary, release)
+    found = archives(name, binary, ".tar.gz", release)
+    if not found:
+        sys.exit(f"{name}: the release {release['tag_name']} has no archives")
     klass = "".join(part.capitalize() for part in name.split("-"))
 
     lines = [
@@ -106,15 +107,63 @@ def formula(name: str, package: dict, release: dict) -> str:
     return "\n".join(lines) + "\n"
 
 
+def cask(name: str, package: dict, release: dict) -> str | None:
+    """The cask of a macOS app, from its disk image for Apple silicon; or
+    nothing, when the release has none."""
+    repo, app = package["repo"], package["app"]
+    version = release["tag_name"].removeprefix("v")
+    found = archives(name, package["asset"], ".dmg", release)
+    if ("macos", "arm") not in found:
+        return None
+    url, sha256 = found[("macos", "arm")]
+    lines = [
+        f"# Written by tools/update.py from {repo} {release['tag_name']}: do not edit.",
+        f'cask "{name}" do',
+        f'  version "{version}"',
+        f'  sha256 "{sha256}"',
+        "",
+        f'  url "{url.replace(version, "#{version}")}"',
+        f'  name "{package["name"]}"',
+        f'  desc "{package["desc"]}"',
+        f'  homepage "https://github.com/{repo}"',
+        "",
+        "  depends_on arch: :arm64",
+    ]
+    if depends_on := package.get("depends_on"):
+        lines += [f'  depends_on formula: "stemma-math/tap/{depends_on}"']
+    lines += [
+        "",
+        f'  app "{app}"',
+        "",
+        "  # Signed ad hoc, not by a developer: macOS would refuse to open it.",
+        "  postflight do",
+        "    system_command \"/usr/bin/xattr\",",
+        f'                   args: ["-dr", "com.apple.quarantine", "#{{appdir}}/{app}"]',
+        "  end",
+        "end",
+    ]
+    return "\n".join(lines) + "\n"
+
+
 def main() -> None:
     packages = tomllib.loads((ROOT / "packages.toml").read_text())
     names = sys.argv[1:] or list(packages)
     for name in names:
         if name not in packages:
             sys.exit(f"{name} is not in packages.toml")
-        release = latest_release(packages[name]["repo"])
-        path = ROOT / "Formula" / f"{name}.rb"
-        path.write_text(formula(name, packages[name], release))
+        package = packages[name]
+        release = latest_release(package["repo"])
+        if "app" in package:
+            text = cask(name, package, release)
+            if text is None:
+                print(f"{name}: {release['tag_name']} has no app for macOS, left as it was")
+                continue
+            path = ROOT / "Casks" / f"{name}.rb"
+        else:
+            text = formula(name, package, release)
+            path = ROOT / "Formula" / f"{name}.rb"
+        path.parent.mkdir(exist_ok=True)
+        path.write_text(text)
         print(f"{name} {release['tag_name']}")
 
 

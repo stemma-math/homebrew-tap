@@ -1,4 +1,5 @@
-# Each formula must pass Homebrew's style, install, and run.
+# Each formula and cask must pass Homebrew's style and install; each formula
+# must also run. Casks are for macOS only.
 name: Checks
 
 on:
@@ -25,5 +26,15 @@ jobs:
             brew install "$name"
             brew test "$name"
             brew uninstall "$name"
+          done
+        working-directory: ${{ github.workspace }}
+      - name: Install casks
+        if: runner.os == 'macOS'
+        run: |
+          for cask in Casks/*.rb; do
+            [ -e "$cask" ] || continue
+            name="stemma-math/tap/$(basename "$cask" .rb)"
+            brew install --cask "$name"
+            brew uninstall --cask "$name"
           done
         working-directory: ${{ github.workspace }}
