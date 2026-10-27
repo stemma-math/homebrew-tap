@@ -8,14 +8,14 @@ cask "stemma-app" do
   desc "Desktop app for doing mathematics with people and agents"
   homepage "https://github.com/stemma-math/stemma-exedra"
 
+  depends_on :macos
   depends_on arch: :arm64
   depends_on formula: "stemma-math/tap/stemma"
 
   app "Stemma.app"
 
   # Signed ad hoc, not by a developer: macOS would refuse to open it.
-  postflight do
-    system_command "/usr/bin/xattr",
-                   args: ["-dr", "com.apple.quarantine", "#{appdir}/Stemma.app"]
+  postflight_steps do
+    run "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "{{appdir}}/Stemma.app"]
   end
 end

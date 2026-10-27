@@ -127,6 +127,7 @@ def cask(name: str, package: dict, release: dict) -> str | None:
         f'  desc "{package["desc"]}"',
         f'  homepage "https://github.com/{repo}"',
         "",
+        "  depends_on :macos",
         "  depends_on arch: :arm64",
     ]
     if depends_on := package.get("depends_on"):
@@ -136,9 +137,8 @@ def cask(name: str, package: dict, release: dict) -> str | None:
         f'  app "{app}"',
         "",
         "  # Signed ad hoc, not by a developer: macOS would refuse to open it.",
-        "  postflight do",
-        "    system_command \"/usr/bin/xattr\",",
-        f'                   args: ["-dr", "com.apple.quarantine", "#{{appdir}}/{app}"]',
+        "  postflight_steps do",
+        f'    run "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "{{{{appdir}}}}/{app}"]',
         "  end",
         "end",
     ]
