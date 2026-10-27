@@ -8,9 +8,9 @@ cask "stemma-app" do
   desc "Desktop app for doing mathematics with people and agents"
   homepage "https://github.com/stemma-math/stemma-exedra"
 
-  depends_on :macos
   depends_on arch: :arm64
   depends_on formula: "stemma-math/tap/stemma"
+  depends_on :macos
 
   app "Stemma.app"
 

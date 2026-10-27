@@ -127,12 +127,13 @@ def cask(name: str, package: dict, release: dict) -> str | None:
         f'  desc "{package["desc"]}"',
         f'  homepage "https://github.com/{repo}"',
         "",
-        "  depends_on :macos",
         "  depends_on arch: :arm64",
     ]
+    # In the order Homebrew's style wants: alphabetical.
     if depends_on := package.get("depends_on"):
         lines += [f'  depends_on formula: "stemma-math/tap/{depends_on}"']
     lines += [
+        "  depends_on :macos",
         "",
         f'  app "{app}"',
         "",
