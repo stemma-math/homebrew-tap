@@ -1,4 +1,4 @@
-# Writes the formulas again from their repositories' latest releases, and
+# Writes the formulas and casks again from their repositories' latest releases, and
 # commits what changed. Run by hand, or when a repository announces a
 # release through `notify.yml`.
 name: Update
@@ -31,6 +31,7 @@ jobs:
       - name: Commit what changed
         run: |
           git add Formula
+          [ -d Casks ] && git add Casks
           git diff --cached --quiet && exit 0
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"

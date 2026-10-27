@@ -129,16 +129,17 @@ def cask(name: str, package: dict, release: dict) -> str | None:
         "",
         "  depends_on arch: :arm64",
     ]
+    # In the order Homebrew's style wants: alphabetical.
     if depends_on := package.get("depends_on"):
         lines += [f'  depends_on formula: "stemma-math/tap/{depends_on}"']
     lines += [
+        "  depends_on :macos",
         "",
         f'  app "{app}"',
         "",
         "  # Signed ad hoc, not by a developer: macOS would refuse to open it.",
-        "  postflight do",
-        "    system_command \"/usr/bin/xattr\",",
-        f'                   args: ["-dr", "com.apple.quarantine", "#{{appdir}}/{app}"]',
+        "  postflight_steps do",
+        f'    run "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "{{{{appdir}}}}/{app}"]',
         "  end",
         "end",
     ]
