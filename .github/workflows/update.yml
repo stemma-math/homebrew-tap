@@ -22,7 +22,11 @@ jobs:
   update:
     runs-on: ubuntu-latest
     steps:
+      # The latest main, not the commit the event saw: two releases announced
+      # at once run one after the other, and the second builds on the first.
       - uses: actions/checkout@v5
+        with:
+          ref: main
       - name: Write the formulas
         env:
           GH_TOKEN: ${{ github.token }}
