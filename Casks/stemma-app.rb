@@ -1,7 +1,7 @@
-# Written by tools/update.py from stemma-math/stemma-exedra v0.3.0: do not edit.
+# Written by tools/update.py from stemma-math/stemma-exedra v0.3.1: do not edit.
 cask "stemma-app" do
-  version "0.3.0"
-  sha256 "ed1c398b56edce796d4b2e2b5752003baec9443aa8c52ab60d24b8cc37e7988a"
+  version "0.3.1"
+  sha256 "9ca753b75173a4bb906ecac655cdae331f7c42b031eee9fed693eea34afd0204"
 
   url "https://github.com/stemma-math/stemma-exedra/releases/download/v#{version}/stemma-app-#{version}-aarch64-apple-darwin.dmg"
   name "Stemma"
